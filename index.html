@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Library · Live Seat Monitor</title>
-  <!-- Google Font & Firebase SDK -->
+  <title>Smart Library · Seat Intelligence</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
@@ -18,400 +17,857 @@
     }
 
     :root {
-      --bg-deep: #090c15;
-      --bg-surface: #111827;
-      --bg-card: #1a2235;
-      --border-subtle: #2a354b;
-      --text-primary: #f0f4ff;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --accent-blue: #3b82f6;
-      --accent-green: #10b981;
-      --accent-green-glow: #34d399;
-      --accent-red: #ef4444;
-      --accent-red-glow: #f87171;
-      --shadow-card: 0 20px 35px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.03);
+      --bg-0: #06080f;
+      --bg-1: #0b0f1a;
+      --bg-2: #101624;
+      --bg-3: #161d2e;
+      --border-0: #1e2638;
+      --border-1: #2a3448;
+      --text-0: #ffffff;
+      --text-1: #cbd5e1;
+      --text-2: #8892a8;
+      --text-3: #5a6478;
+      --brand: #4f7cff;
+      --brand-dim: #3b5fd9;
+      --green: #10b981;
+      --green-light: #34d399;
+      --red: #ef4444;
+      --red-light: #f87171;
+      --amber: #f59e0b;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+      --shadow-card: 0 1px 3px rgba(0,0,0,0.5), 0 8px 24px -8px rgba(0,0,0,0.6);
+      --shadow-elevated: 0 4px 12px rgba(0,0,0,0.4), 0 16px 40px -12px rgba(0,0,0,0.7);
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+    }
+
+    html, body {
+      height: 100%;
     }
 
     body {
-      background: radial-gradient(circle at 20% 10%, #1a2337 0%, #090c15 80%);
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg-0);
+      font-family: var(--font-sans);
+      color: var(--text-1);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      padding: 2rem 1.5rem;
       min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(79, 124, 255, 0.08), transparent),
+        linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 100%);
+      background-attachment: fixed;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1180px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+
+    /* ═══════════════════════════════════════════
+       TOP NAVIGATION / BRAND BAR
+    ═══════════════════════════════════════════ */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.75rem;
+      background: linear-gradient(135deg, rgba(22, 29, 46, 0.7), rgba(16, 22, 36, 0.7));
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-0);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--brand) 0%, #6d5cff 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1.5rem;
-      color: var(--text-primary);
-      -webkit-font-smoothing: antialiased;
+      box-shadow: 0 8px 20px -6px rgba(79, 124, 255, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+      position: relative;
+      overflow: hidden;
     }
 
-    .dashboard {
-      max-width: 1100px;
-      width: 100%;
-      background: rgba(17, 24, 39, 0.85);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border-radius: 2.75rem;
-      padding: 2.25rem 2.25rem 1.75rem;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      box-shadow: var(--shadow-card), 0 0 0 1px rgba(59, 130, 246, 0.1) inset;
+    .brand-mark::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 100%);
     }
 
-    /* ---------- HEADER ---------- */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-      margin-bottom: 2rem;
+    .brand-mark svg {
+      width: 22px;
+      height: 22px;
+      fill: white;
+      position: relative;
+      z-index: 1;
     }
 
-    .brand h1 {
-      font-size: 1.9rem;
+    .brand-text h1 {
+      font-size: 1.2rem;
       font-weight: 700;
-      letter-spacing: -0.03em;
-      background: linear-gradient(to right, #ffffff, #cbd5e1);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: var(--text-0);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .brand-text .tagline {
+      font-size: 0.75rem;
+      color: var(--text-3);
+      font-weight: 500;
+      letter-spacing: 0.02em;
       display: flex;
       align-items: center;
-      gap: 0.65rem;
+      gap: 0.5rem;
+      margin-top: 2px;
     }
 
-    .brand h1 .pulse-dot {
-      width: 12px;
-      height: 12px;
-      background: var(--accent-green);
-      border-radius: 50%;
-      box-shadow: 0 0 18px var(--accent-green-glow);
-      animation: pulseGlow 2s infinite;
-    }
-
-    @keyframes pulseGlow {
-      0% { opacity: 0.8; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.15); }
-      100% { opacity: 0.8; transform: scale(1); }
-    }
-
-    .brand .sub {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-top: 0.3rem;
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-      font-weight: 400;
-    }
-
-    .live-tag {
-      background: rgba(16, 185, 129, 0.15);
-      color: var(--accent-green-glow);
-      border: 1px solid rgba(52, 211, 153, 0.3);
-      padding: 0.2rem 0.8rem;
-      border-radius: 40px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
+    .live-indicator {
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      backdrop-filter: blur(4px);
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--green-light);
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 0.15rem 0.6rem;
+      border-radius: 100px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
-    .live-tag::before {
-      content: "";
-      width: 6px;
-      height: 6px;
-      background: var(--accent-green-glow);
+    .live-indicator .dot {
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
-      display: inline-block;
-      animation: pulseGlow 1.5s infinite;
+      background: var(--green-light);
+      box-shadow: 0 0 8px var(--green-light);
+      animation: blink 2s infinite;
     }
 
-    .stats {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
     }
 
-    .stat-card {
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 1.25rem;
-      padding: 0.7rem 1.5rem;
+    .topbar-right {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      box-shadow: 0 8px 15px -6px rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(8px);
+      gap: 1.5rem;
     }
 
-    .stat-card .label {
-      font-size: 0.68rem;
+    .system-time {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+
+    .system-time .label {
+      font-size: 0.65rem;
       font-weight: 600;
+      color: var(--text-3);
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: var(--text-muted);
     }
 
-    .stat-card .value {
-      font-size: 1.7rem;
-      font-weight: 700;
-      line-height: 1.2;
-      color: var(--text-primary);
+    .system-time .value {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-1);
       font-feature-settings: "tnum";
     }
 
-    .stat-card.available .value { color: var(--accent-green-glow); }
-    .stat-card.occupied .value { color: var(--accent-red-glow); }
-    .stat-card.total .value { color: #60a5fa; }
-
-    /* ---------- SEAT GRID ---------- */
-    .seats-grid {
+    /* ═══════════════════════════════════════════
+       STATS OVERVIEW
+    ═══════════════════════════════════════════ */
+    .stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1.25rem;
-      margin: 2rem 0 1.5rem;
-    }
-
-    .seat-card {
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(8px);
-      border-radius: 1.75rem;
-      padding: 1.6rem 0.8rem 1.3rem;
-      text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
-      position: relative;
-      box-shadow: 0 12px 20px -12px rgba(0, 0, 0, 0.8);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.2rem;
-    }
-
-    .seat-card .badge {
-      position: absolute;
-      top: -8px;
-      right: 14px;
-      background: #0f172a;
-      border: 1px solid var(--border-subtle);
-      color: var(--text-secondary);
-      font-size: 0.6rem;
-      font-weight: 700;
-      letter-spacing: 0.8px;
-      padding: 0.18rem 0.8rem;
-      border-radius: 40px;
-      text-transform: uppercase;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-    }
-
-    .seat-card .icon {
-      font-size: 2.1rem;
-      line-height: 1;
-      margin-bottom: 0.25rem;
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
-    }
-
-    .seat-card .name {
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 0.25rem;
-    }
-
-    .seat-card .status {
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-    }
-
-    /* Occupied state */
-    .seat-card.occupied {
-      border-color: rgba(239, 68, 68, 0.6);
-      background: linear-gradient(145deg, #1a1f2e, #1e1a28);
-      box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.2) inset, 0 12px 20px -12px #000, 0 0 25px rgba(239, 68, 68, 0.25);
-      transform: translateY(-2px);
-    }
-
-    .seat-card.occupied .status {
-      color: var(--accent-red-glow);
-      text-shadow: 0 0 12px rgba(248, 113, 113, 0.5);
-    }
-
-    .seat-card.occupied .icon {
-      color: var(--accent-red);
-      filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.4));
-    }
-
-    /* Vacant state */
-    .seat-card.vacant {
-      border-color: rgba(16, 185, 129, 0.5);
-      background: linear-gradient(145deg, #111c1e, #0e1a1a);
-      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.15) inset, 0 12px 20px -12px #000, 0 0 25px rgba(16, 185, 129, 0.15);
-      transform: translateY(-2px);
-    }
-
-    .seat-card.vacant .status {
-      color: var(--accent-green-glow);
-      text-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
-    }
-
-    .seat-card.vacant .icon {
-      color: var(--accent-green);
-      filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.3));
-    }
-
-    /* ---------- FOOTER ---------- */
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
+      grid-template-columns: repeat(3, 1fr);
       gap: 1rem;
-      margin-top: 1rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      color: var(--text-muted);
-      font-size: 0.75rem;
     }
 
-    .connection {
+    .stat-tile {
+      background: linear-gradient(160deg, var(--bg-2) 0%, var(--bg-1) 100%);
+      border: 1px solid var(--border-0);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem 1.75rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      transition: transform 0.25s ease, border-color 0.25s ease;
+    }
+
+    .stat-tile:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-1);
+    }
+
+    .stat-tile::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      opacity: 0.6;
+    }
+
+    .stat-tile.available::before { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+    .stat-tile.occupied::before { background: linear-gradient(90deg, transparent, var(--red), transparent); }
+    .stat-tile.total::before { background: linear-gradient(90deg, transparent, var(--brand), transparent); }
+
+    .stat-tile .stat-header {
       display: flex;
       align-items: center;
-      gap: 0.65rem;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .stat-tile .stat-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-3);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .stat-tile .stat-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stat-tile.available .stat-icon { background: rgba(16, 185, 129, 0.12); color: var(--green-light); }
+    .stat-tile.occupied .stat-icon { background: rgba(239, 68, 68, 0.12); color: var(--red-light); }
+    .stat-tile.total .stat-icon { background: rgba(79, 124, 255, 0.12); color: #7ea0ff; }
+
+    .stat-tile .stat-icon svg {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .stat-tile .stat-value {
+      font-size: 2.4rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--text-0);
+      letter-spacing: -0.03em;
+      font-feature-settings: "tnum";
+    }
+
+    .stat-tile .stat-meta {
+      margin-top: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+      color: var(--text-3);
       font-weight: 500;
     }
 
-    .conn-dot {
-      width: 9px;
-      height: 9px;
+    .stat-tile .progress-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--bg-0);
+      border-radius: 100px;
+      overflow: hidden;
+      max-width: 100px;
+    }
+
+    .stat-tile .progress-fill {
+      height: 100%;
+      border-radius: 100px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-tile.available .progress-fill { background: linear-gradient(90deg, var(--green), var(--green-light)); }
+    .stat-tile.occupied .progress-fill { background: linear-gradient(90deg, var(--red), var(--red-light)); }
+
+    /* ═══════════════════════════════════════════
+       SEAT GRID SECTION
+    ═══════════════════════════════════════════ */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 0.5rem;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-title h2 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-2);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .section-title .count-badge {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-3);
+      background: var(--bg-2);
+      border: 1px solid var(--border-0);
+      padding: 0.15rem 0.6rem;
+      border-radius: 100px;
+    }
+
+    .seats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .seat-panel {
+      background: linear-gradient(170deg, var(--bg-2) 0%, var(--bg-1) 100%);
+      border: 1px solid var(--border-0);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem 1.25rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .seat-panel::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--border-1);
+      transition: background 0.3s ease;
+    }
+
+    .seat-panel.vacant::after {
+      background: linear-gradient(90deg, var(--green), var(--green-light));
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .seat-panel.occupied::after {
+      background: linear-gradient(90deg, var(--red), var(--red-light));
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .seat-panel.vacant {
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    .seat-panel.occupied {
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .seat-panel:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-elevated);
+    }
+
+    .seat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .seat-id {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .seat-id .id-number {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-3);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .seat-id .id-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-0);
+      letter-spacing: -0.01em;
+    }
+
+    .seat-status-badge {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.7rem;
+      border-radius: 100px;
+      transition: all 0.3s ease;
+    }
+
+    .seat-panel.vacant .seat-status-badge {
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--green-light);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .seat-panel.occupied .seat-status-badge {
+      background: rgba(239, 68, 68, 0.12);
+      color: var(--red-light);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .seat-visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem 0;
+      position: relative;
+    }
+
+    .seat-visual svg {
+      width: 64px;
+      height: 64px;
+      transition: all 0.3s ease;
+    }
+
+    .seat-panel.vacant .seat-visual svg {
+      color: var(--green-light);
+      filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.3));
+    }
+
+    .seat-panel.occupied .seat-visual svg {
+      color: var(--red-light);
+      filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.3));
+    }
+
+    .seat-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border-0);
+    }
+
+    .seat-footer .signal-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-3);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .seat-footer .signal-dots {
+      display: flex;
+      gap: 3px;
+      align-items: center;
+    }
+
+    .signal-dots .dot {
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
-      background: #64748b;
-      transition: background 0.3s, box-shadow 0.3s;
+      background: var(--border-1);
+      transition: background 0.3s ease;
     }
 
-    .conn-dot.online {
-      background: var(--accent-green-glow);
-      box-shadow: 0 0 12px var(--accent-green-glow);
+    .seat-panel.vacant .signal-dots .dot {
+      background: var(--green);
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
     }
 
-    .conn-dot.offline {
-      background: var(--accent-red-glow);
-      box-shadow: 0 0 12px var(--accent-red-glow);
+    .seat-panel.occupied .signal-dots .dot {
+      background: var(--red);
+      box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
     }
 
-    .timestamp {
-      font-family: 'Inter', monospace;
-      background: rgba(15, 23, 42, 0.8);
-      padding: 0.3rem 1rem;
-      border-radius: 40px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      letter-spacing: 0.2px;
+    .signal-dots .dot:nth-child(2) { opacity: 0.7; }
+    .signal-dots .dot:nth-child(3) { opacity: 0.4; }
+
+    /* ═══════════════════════════════════════════
+       FOOTER / STATUS BAR
+    ═══════════════════════════════════════════ */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.75rem;
+      background: linear-gradient(135deg, rgba(22, 29, 46, 0.6), rgba(16, 22, 36, 0.6));
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-0);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      font-size: 0.75rem;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .conn-status {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 500;
+      color: var(--text-2);
+    }
+
+    .conn-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-3);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .conn-indicator.online {
+      background: var(--green);
+      box-shadow: 0 0 12px var(--green);
+    }
+
+    .conn-indicator.online::after {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      border: 1px solid var(--green);
+      opacity: 0.5;
+      animation: ping 2s infinite;
+    }
+
+    @keyframes ping {
+      0% { transform: scale(1); opacity: 0.6; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+
+    .conn-indicator.offline {
+      background: var(--red);
+      box-shadow: 0 0 12px var(--red);
+    }
+
+    .status-divider {
+      width: 1px;
+      height: 16px;
+      background: var(--border-0);
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-3);
+      font-weight: 500;
+    }
+
+    .status-item .key {
+      color: var(--text-3);
+    }
+
+    .status-item .val {
+      font-family: var(--font-mono);
+      color: var(--text-1);
+      font-weight: 500;
       font-feature-settings: "tnum";
-      color: var(--text-secondary);
     }
 
-    /* ---------- RESPONSIVE ---------- */
-    @media (max-width: 750px) {
-      .dashboard { padding: 1.5rem; border-radius: 2rem; }
-      .header { flex-direction: column; align-items: flex-start; }
-      .brand h1 { font-size: 1.6rem; }
-      .stats { width: 100%; justify-content: space-between; }
-      .stat-card { padding: 0.6rem 1rem; flex: 1; min-width: 90px; }
-      .stat-card .value { font-size: 1.4rem; }
-      .seats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.9rem; }
-      .seat-card .icon { font-size: 1.8rem; }
-      .seat-card .status { font-size: 1rem; }
+    .status-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
     }
 
-    @media (max-width: 420px) {
-      .stats { flex-wrap: wrap; }
-      .stat-card { flex: 1 1 40%; }
+    .fw-tag {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-3);
+      background: var(--bg-2);
+      border: 1px solid var(--border-0);
+      padding: 0.25rem 0.7rem;
+      border-radius: 100px;
+      letter-spacing: 0.02em;
+    }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .seats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      .topbar { flex-direction: column; align-items: flex-start; gap: 1rem; }
+      .topbar-right { width: 100%; justify-content: space-between; }
+      .stats-grid { grid-template-columns: 1fr; }
       .seats-grid { grid-template-columns: 1fr; }
-      .footer { flex-direction: column; align-items: flex-start; }
+      .status-bar { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+      .status-left { flex-wrap: wrap; gap: 0.75rem; }
+      .status-divider { display: none; }
+      .stat-tile .stat-value { font-size: 2rem; }
+    }
+
+    @media (max-width: 400px) {
+      .topbar { padding: 1rem; }
+      .stat-tile { padding: 1.25rem; }
+      .seat-panel { padding: 1.25rem 1rem; }
     }
   </style>
 </head>
 <body>
-<div class="dashboard">
-  <!-- HEADER -->
-  <div class="header">
-    <div class="brand">
-      <h1>
-        <span class="pulse-dot"></span> Smart Library
-      </h1>
-      <div class="sub">
-        <span>Seat occupancy · real‑time</span>
-        <span class="live-tag">LIVE</span>
-      </div>
-    </div>
-    <div class="stats">
-      <div class="stat-card available">
-        <div class="label">Available</div>
-        <div class="value" id="availableValue">—</div>
-      </div>
-      <div class="stat-card occupied">
-        <div class="label">Occupied</div>
-        <div class="value" id="occupiedValue">—</div>
-      </div>
-      <div class="stat-card total">
-        <div class="label">Total</div>
-        <div class="value" id="totalValue">4</div>
-      </div>
-    </div>
-  </div>
+<div class="app">
 
-  <!-- SEAT CARDS -->
-  <div class="seats-grid" id="seatsGrid">
-    <!-- Seat 1 -->
-    <div class="seat-card" id="seat1Card">
-      <div class="badge">S1</div>
-      <div class="icon">🪑</div>
-      <div class="name">Seat 1</div>
-      <div class="status" id="seat1Status">—</div>
+  <!-- ═══════════════ TOP BAR ═══════════════ -->
+  <header class="topbar">
+    <div class="brand-group">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 6h16v2H4V6zm0 5h16v2H4v-2zm0 5h16v2H4v-2z"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Smart Library</h1>
+        <div class="tagline">
+          <span>Seat Occupancy Intelligence</span>
+          <span class="live-indicator"><span class="dot"></span> Live</span>
+        </div>
+      </div>
     </div>
-    <!-- Seat 2 -->
-    <div class="seat-card" id="seat2Card">
-      <div class="badge">S2</div>
-      <div class="icon">🪑</div>
-      <div class="name">Seat 2</div>
-      <div class="status" id="seat2Status">—</div>
+    <div class="topbar-right">
+      <div class="system-time">
+        <span class="label">System Time</span>
+        <span class="value" id="systemClock">--:--:--</span>
+      </div>
     </div>
-    <!-- Seat 3 -->
-    <div class="seat-card" id="seat3Card">
-      <div class="badge">S3</div>
-      <div class="icon">🪑</div>
-      <div class="name">Seat 3</div>
-      <div class="status" id="seat3Status">—</div>
-    </div>
-    <!-- Seat 4 -->
-    <div class="seat-card" id="seat4Card">
-      <div class="badge">S4</div>
-      <div class="icon">🪑</div>
-      <div class="name">Seat 4</div>
-      <div class="status" id="seat4Status">—</div>
-    </div>
-  </div>
+  </header>
 
-  <!-- FOOTER -->
-  <div class="footer">
-    <div class="connection">
-      <span class="conn-dot" id="connectionDot"></span>
-      <span id="connectionText">Connecting to Firebase…</span>
+  <!-- ═══════════════ STATS OVERVIEW ═══════════════ -->
+  <section class="stats-grid">
+    <!-- Available -->
+    <div class="stat-tile available">
+      <div class="stat-header">
+        <span class="stat-label">Available</span>
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+      </div>
+      <div class="stat-value" id="availableValue">—</div>
+      <div class="stat-meta">
+        <span>Capacity</span>
+        <div class="progress-bar">
+          <div class="progress-fill" id="availableBar" style="width: 0%"></div>
+        </div>
+      </div>
     </div>
-    <div class="timestamp" id="lastUpdate">—</div>
-  </div>
+
+    <!-- Occupied -->
+    <div class="stat-tile occupied">
+      <div class="stat-header">
+        <span class="stat-label">Occupied</span>
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        </div>
+      </div>
+      <div class="stat-value" id="occupiedValue">—</div>
+      <div class="stat-meta">
+        <span>In Use</span>
+        <div class="progress-bar">
+          <div class="progress-fill" id="occupiedBar" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total -->
+    <div class="stat-tile total">
+      <div class="stat-header">
+        <span class="stat-label">Total Seats</span>
+        <div class="stat-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </div>
+      </div>
+      <div class="stat-value" id="totalValue">4</div>
+      <div class="stat-meta">
+        <span>Monitored Units</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SEAT GRID ═══════════════ -->
+  <section>
+    <div class="section-header">
+      <div class="section-title">
+        <h2>Seat Monitor</h2>
+        <span class="count-badge" id="seatCountBadge">0 / 4 occupied</span>
+      </div>
+    </div>
+    <div class="seats-grid" style="margin-top: 1rem;">
+      <!-- Seat 1 -->
+      <div class="seat-panel" id="seat1Card">
+        <div class="seat-header">
+          <div class="seat-id">
+            <span class="id-number">Unit 01</span>
+            <span class="id-name">Seat 1</span>
+          </div>
+          <span class="seat-status-badge" id="seat1Badge">—</span>
+        </div>
+        <div class="seat-visual">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 11V7a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v4"/>
+            <path d="M4 11h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2z"/>
+            <path d="M6 19v2M18 19v2"/>
+          </svg>
+        </div>
+        <div class="seat-footer">
+          <span class="signal-label">Signal</span>
+          <div class="signal-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seat 2 -->
+      <div class="seat-panel" id="seat2Card">
+        <div class="seat-header">
+          <div class="seat-id">
+            <span class="id-number">Unit 02</span>
+            <span class="id-name">Seat 2</span>
+          </div>
+          <span class="seat-status-badge" id="seat2Badge">—</span>
+        </div>
+        <div class="seat-visual">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 11V7a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v4"/>
+            <path d="M4 11h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2z"/>
+            <path d="M6 19v2M18 19v2"/>
+          </svg>
+        </div>
+        <div class="seat-footer">
+          <span class="signal-label">Signal</span>
+          <div class="signal-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seat 3 -->
+      <div class="seat-panel" id="seat3Card">
+        <div class="seat-header">
+          <div class="seat-id">
+            <span class="id-number">Unit 03</span>
+            <span class="id-name">Seat 3</span>
+          </div>
+          <span class="seat-status-badge" id="seat3Badge">—</span>
+        </div>
+        <div class="seat-visual">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 11V7a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v4"/>
+            <path d="M4 11h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2z"/>
+            <path d="M6 19v2M18 19v2"/>
+          </svg>
+        </div>
+        <div class="seat-footer">
+          <span class="signal-label">Signal</span>
+          <div class="signal-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seat 4 -->
+      <div class="seat-panel" id="seat4Card">
+        <div class="seat-header">
+          <div class="seat-id">
+            <span class="id-number">Unit 04</span>
+            <span class="id-name">Seat 4</span>
+          </div>
+          <span class="seat-status-badge" id="seat4Badge">—</span>
+        </div>
+        <div class="seat-visual">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 11V7a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v4"/>
+            <path d="M4 11h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2z"/>
+            <path d="M6 19v2M18 19v2"/>
+          </svg>
+        </div>
+        <div class="seat-footer">
+          <span class="signal-label">Signal</span>
+          <div class="signal-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ STATUS BAR ═══════════════ -->
+  <footer class="status-bar">
+    <div class="status-left">
+      <div class="conn-status">
+        <span class="conn-indicator" id="connIndicator"></span>
+        <span id="connText">Connecting to Firebase…</span>
+      </div>
+      <div class="status-divider"></div>
+      <div class="status-item">
+        <span class="key">Last Update</span>
+        <span class="val" id="lastUpdate">—</span>
+      </div>
+    </div>
+    <div class="status-right">
+      <span class="fw-tag">v1.0.0 · ESP32</span>
+    </div>
+  </footer>
 </div>
 
 <script>
   (function () {
     // ================================================================
-    // 1. FIREBASE CONFIG (matches ESP32 code)
+    // FIREBASE CONFIGURATION
     // ================================================================
     const firebaseConfig = {
       apiKey: "AIzaSyDZ0Yn5ghQhCGixSs_j6hpz9_1-hjJvc3k",
@@ -422,7 +878,7 @@
     const database = firebase.database();
 
     // ================================================================
-    // 2. DOM REFERENCES
+    // DOM REFERENCES
     // ================================================================
     const seatCards = {
       1: document.getElementById('seat1Card'),
@@ -431,99 +887,105 @@
       4: document.getElementById('seat4Card'),
     };
 
-    const seatStatuses = {
-      1: document.getElementById('seat1Status'),
-      2: document.getElementById('seat2Status'),
-      3: document.getElementById('seat3Status'),
-      4: document.getElementById('seat4Status'),
+    const seatBadges = {
+      1: document.getElementById('seat1Badge'),
+      2: document.getElementById('seat2Badge'),
+      3: document.getElementById('seat3Badge'),
+      4: document.getElementById('seat4Badge'),
     };
 
     const availableValue = document.getElementById('availableValue');
     const occupiedValue = document.getElementById('occupiedValue');
     const totalValue = document.getElementById('totalValue');
-    const connectionDot = document.getElementById('connectionDot');
-    const connectionText = document.getElementById('connectionText');
+    const availableBar = document.getElementById('availableBar');
+    const occupiedBar = document.getElementById('occupiedBar');
+    const seatCountBadge = document.getElementById('seatCountBadge');
+    const connIndicator = document.getElementById('connIndicator');
+    const connText = document.getElementById('connText');
     const lastUpdate = document.getElementById('lastUpdate');
+    const systemClock = document.getElementById('systemClock');
 
     // ================================================================
-    // 3. STATE (mirrors Firebase data)
+    // STATE
     // ================================================================
     let state = {
-      seat1: 0,
-      seat2: 0,
-      seat3: 0,
-      seat4: 0,
-      occupied: 0,
-      available: 4,
-      totalSeats: 4,
+      seat1: 0, seat2: 0, seat3: 0, seat4: 0,
+      occupied: 0, available: 4, totalSeats: 4,
     };
 
     // ================================================================
-    // 4. RENDER FUNCTION (with smooth class transitions)
+    // RENDER
     // ================================================================
     function render() {
-      // --- Update each seat card ---
+      // --- Individual seats ---
       for (let i = 1; i <= 4; i++) {
         const key = 'seat' + i;
-        const val = state[key];   // 0 = vacant, 1 = occupied
+        const val = state[key];
         const card = seatCards[i];
-        const statusEl = seatStatuses[i];
+        const badge = seatBadges[i];
 
-        // Remove both states first
         card.classList.remove('occupied', 'vacant');
 
         if (val === 1) {
           card.classList.add('occupied');
-          statusEl.textContent = 'OCCUPIED';
+          badge.textContent = 'Occupied';
         } else {
           card.classList.add('vacant');
-          statusEl.textContent = 'VACANT';
+          badge.textContent = 'Vacant';
         }
       }
 
-      // --- Summary stats ---
-      availableValue.textContent = state.available ?? '—';
-      occupiedValue.textContent = state.occupied ?? '—';
-      totalValue.textContent = state.totalSeats ?? 4;
+      // --- Summary ---
+      const total = state.totalSeats || 4;
+      const avail = state.available ?? 0;
+      const occ = state.occupied ?? 0;
 
-      // --- Timestamp ---
+      availableValue.textContent = avail;
+      occupiedValue.textContent = occ;
+      totalValue.textContent = total;
+
+      // Progress bars
+      const availPct = total > 0 ? (avail / total) * 100 : 0;
+      const occPct = total > 0 ? (occ / total) * 100 : 0;
+      availableBar.style.width = availPct + '%';
+      occupiedBar.style.width = occPct + '%';
+
+      // Count badge
+      seatCountBadge.textContent = occ + ' / ' + total + ' occupied';
+
+      // Timestamp
       const now = new Date();
       lastUpdate.textContent = now.toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
       });
     }
 
     // ================================================================
-    // 5. FIREBASE LISTENERS
+    // FIREBASE LISTENERS
     // ================================================================
     const libraryRef = database.ref('library');
-
-    // --- Connection monitor ---
     const connectedRef = database.ref('.info/connected');
+
     connectedRef.on('value', (snap) => {
       const connected = snap.val() === true;
       if (connected) {
-        connectionDot.classList.add('online');
-        connectionDot.classList.remove('offline');
-        connectionText.textContent = 'Connected to Firebase';
+        connIndicator.classList.add('online');
+        connIndicator.classList.remove('offline');
+        connText.textContent = 'Connected to Firebase Realtime Database';
       } else {
-        connectionDot.classList.add('offline');
-        connectionDot.classList.remove('online');
-        connectionText.textContent = 'Disconnected from Firebase';
+        connIndicator.classList.add('offline');
+        connIndicator.classList.remove('online');
+        connText.textContent = 'Disconnected from Firebase';
       }
     });
 
-    // --- Main data listener ---
     libraryRef.on('value', (snapshot) => {
       const data = snapshot.val();
       if (!data) {
-        connectionText.textContent = 'Waiting for device data…';
+        connText.textContent = 'Awaiting device data…';
         return;
       }
 
-      // Merge incoming data into state
       state.seat1 = data.seat1 ?? 0;
       state.seat2 = data.seat2 ?? 0;
       state.seat3 = data.seat3 ?? 0;
@@ -535,25 +997,25 @@
       render();
     }, (error) => {
       console.error('Firebase read error:', error);
-      connectionText.textContent = 'Error reading database';
-      connectionDot.classList.add('offline');
-      connectionDot.classList.remove('online');
+      connText.textContent = 'Error reading database';
+      connIndicator.classList.add('offline');
+      connIndicator.classList.remove('online');
     });
 
     // Initial render
     render();
 
-    // Keep timestamp fresh every 20s even without data change
-    setInterval(() => {
-      if (connectionDot.classList.contains('online')) {
-        const now = new Date();
-        lastUpdate.textContent = now.toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        });
-      }
-    }, 20000);
+    // ================================================================
+    // LIVE CLOCK
+    // ================================================================
+    function updateClock() {
+      const now = new Date();
+      systemClock.textContent = now.toLocaleTimeString([], {
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      });
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
 
   })();
 </script>
