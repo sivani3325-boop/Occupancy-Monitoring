@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Library · Seat Occupancy</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #0f172a;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .dashboard {
+      max-width: 1000px;
+      width: 100%;
+      background: #1e293b;
+      border-radius: 2.5rem;
+      padding: 2rem 2rem 2rem 2rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      border: 1px solid #334155;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .title-section h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .title-section h1 span {
+      background: #3b82f6;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 15px #3b82f6;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin-top: 0.3rem;
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .live-badge {
+      background: #10b98120;
+      color: #34d399;
+      padding: 0.2rem 0.7rem;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      border: 1px solid #10b98140;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .live-badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: #34d399;
+      border-radius: 50%;
+      display: inline-block;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .stats {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      background: #0f172a;
+      border-radius: 1.5rem;
+      padding: 0.8rem 1.6rem;
+      border: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+    }
+
+    .stat-card .label {
+      color: #94a3b8;
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-card .value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      line-height: 1;
+    }
+
+    .stat-card.available .value {
+      color: #34d399;
+    }
+
+    .stat-card.occupied .value {
+      color: #f87171;
+    }
+
+    .stat-card.total .value {
+      color: #60a5fa;
+    }
+
+    .seats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin: 2rem 0 1rem;
+    }
+
+    .seat {
+      background: #0f172a;
+      border-radius: 1.5rem;
+      padding: 1.5rem 0.5rem;
+      text-align: center;
+      border: 2px solid #334155;
+      transition: all 0.25s ease;
+      box-shadow: 0 8px 0 #0b1120;
+      position: relative;
+    }
+
+    .seat .seat-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #94a3b8;
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+
+    .seat .seat-status {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .seat .seat-icon {
+      font-size: 2rem;
+      margin: 0.3rem 0 0.2rem;
+      display: block;
+      line-height: 1;
+    }
+
+    .seat.occupied {
+      border-color: #ef4444;
+      background: #1a1a2e;
+      box-shadow: 0 8px 0 #450a0a, 0 0 20px #ef444430;
+    }
+
+    .seat.occupied .seat-status {
+      color: #f87171;
+    }
+
+    .seat.occupied .seat-icon {
+      color: #ef4444;
+    }
+
+    .seat.vacant {
+      border-color: #10b981;
+      background: #0f1a1a;
+      box-shadow: 0 8px 0 #064e3b, 0 0 20px #10b98120;
+    }
+
+    .seat.vacant .seat-status {
+      color: #34d399;
+    }
+
+    .seat.vacant .seat-icon {
+      color: #34d399;
+    }
+
+    .seat .seat-badge {
+      position: absolute;
+      top: -8px;
+      right: 12px;
+      background: #1e293b;
+      border-radius: 40px;
+      padding: 0.15rem 0.75rem;
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: #94a3b8;
+      border: 1px solid #334155;
+      letter-spacing: 0.5px;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid #1e293b;
+      color: #64748b;
+      font-size: 0.8rem;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .connection-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #64748b;
+      transition: background 0.3s;
+    }
+
+    .connection-dot.online {
+      background: #34d399;
+      box-shadow: 0 0 10px #34d399;
+    }
+
+    .connection-dot.offline {
+      background: #ef4444;
+      box-shadow: 0 0 10px #ef4444;
+    }
+
+    .last-update {
+      font-family: monospace;
+      color: #64748b;
+      background: #0f172a;
+      padding: 0.2rem 0.8rem;
+      border-radius: 20px;
+      border: 1px solid #1e293b;
+    }
+
+    @media (max-width: 700px) {
+      .dashboard { padding: 1.5rem; }
+      .seats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.9rem; }
+      .header { flex-direction: column; align-items: start; }
+      .title-section h1 { font-size: 1.5rem; }
+      .stat-card { padding: 0.6rem 1rem; }
+      .stat-card .value { font-size: 1.4rem; }
+      .seat .seat-icon { font-size: 1.6rem; }
+    }
+
+    @media (max-width: 400px) {
+      .seats-grid { grid-template-columns: 1fr; }
+      .stat-card { width: 100%; justify-content: space-between; }
+    }
+  </style>
+</head>
+<body>
+<div class="dashboard">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <h1>
+        <span></span> Smart Library
+      </h1>
+      <div class="subtitle">
+        Seat occupancy monitoring · live
+        <span class="live-badge">LIVE</span>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat-card available">
+        <div class="label">Available</div>
+        <div class="value" id="availableValue">—</div>
+      </div>
+      <div class="stat-card occupied">
+        <div class="label">Occupied</div>
+        <div class="value" id="occupiedValue">—</div>
+      </div>
+      <div class="stat-card total">
+        <div class="label">Total</div>
+        <div class="value" id="totalValue">4</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Seat cards -->
+  <div class="seats-grid" id="seatsGrid">
+    <!-- Seat 1 -->
+    <div class="seat" id="seat1Card">
+      <div class="seat-badge">S1</div>
+      <div class="seat-icon">🪑</div>
+      <div class="seat-label">Seat 1</div>
+      <div class="seat-status" id="seat1Status">—</div>
+    </div>
+    <!-- Seat 2 -->
+    <div class="seat" id="seat2Card">
+      <div class="seat-badge">S2</div>
+      <div class="seat-icon">🪑</div>
+      <div class="seat-label">Seat 2</div>
+      <div class="seat-status" id="seat2Status">—</div>
+    </div>
+    <!-- Seat 3 -->
+    <div class="seat" id="seat3Card">
+      <div class="seat-badge">S3</div>
+      <div class="seat-icon">🪑</div>
+      <div class="seat-label">Seat 3</div>
+      <div class="seat-status" id="seat3Status">—</div>
+    </div>
+    <!-- Seat 4 -->
+    <div class="seat" id="seat4Card">
+      <div class="seat-badge">S4</div>
+      <div class="seat-icon">🪑</div>
+      <div class="seat-label">Seat 4</div>
+      <div class="seat-status" id="seat4Status">—</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div class="connection-status">
+      <span class="connection-dot" id="connectionDot"></span>
+      <span id="connectionText">Connecting to Firebase…</span>
+    </div>
+    <div class="last-update" id="lastUpdate">—</div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ----------------------------------------------------------------
+    // 1. FIREBASE CONFIGURATION (matches your ESP32 code)
+    // ----------------------------------------------------------------
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZ0Yn5ghQhCGixSs_j6hpz9_1-hjJvc3k",
+      databaseURL: "https://occupancy-monitoring-25640-default-rtdb.asia-southeast1.firebasedatabase.app",
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // ----------------------------------------------------------------
+    // 2. DOM ELEMENTS
+    // ----------------------------------------------------------------
+    const seatCards = {
+      1: document.getElementById('seat1Card'),
+      2: document.getElementById('seat2Card'),
+      3: document.getElementById('seat3Card'),
+      4: document.getElementById('seat4Card'),
+    };
+
+    const seatStatuses = {
+      1: document.getElementById('seat1Status'),
+      2: document.getElementById('seat2Status'),
+      3: document.getElementById('seat3Status'),
+      4: document.getElementById('seat4Status'),
+    };
+
+    const availableValue = document.getElementById('availableValue');
+    const occupiedValue = document.getElementById('occupiedValue');
+    const totalValue = document.getElementById('totalValue');
+    const connectionDot = document.getElementById('connectionDot');
+    const connectionText = document.getElementById('connectionText');
+    const lastUpdate = document.getElementById('lastUpdate');
+
+    // ----------------------------------------------------------------
+    // 3. STATE (local mirror of firebase data)
+    // ----------------------------------------------------------------
+    let state = {
+      seat1: 0,
+      seat2: 0,
+      seat3: 0,
+      seat4: 0,
+      occupied: 0,
+      available: 4,
+      totalSeats: 4,
+    };
+
+    // ----------------------------------------------------------------
+    // 4. RENDER FUNCTION
+    // ----------------------------------------------------------------
+    function render() {
+      // Update each seat
+      for (let i = 1; i <= 4; i++) {
+        const key = 'seat' + i;
+        const val = state[key];        // 0 = vacant, 1 = occupied
+        const card = seatCards[i];
+        const statusEl = seatStatuses[i];
+
+        // Remove previous classes
+        card.classList.remove('occupied', 'vacant');
+        if (val === 1) {
+          card.classList.add('occupied');
+          statusEl.textContent = 'OCCUPIED';
+        } else {
+          card.classList.add('vacant');
+          statusEl.textContent = 'VACANT';
+        }
+      }
+
+      // Update summary
+      availableValue.textContent = state.available ?? '—';
+      occupiedValue.textContent = state.occupied ?? '—';
+      totalValue.textContent = state.totalSeats ?? 4;
+
+      // Last update timestamp
+      const now = new Date();
+      lastUpdate.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    // ----------------------------------------------------------------
+    // 5. FIREBASE LISTENERS
+    // ----------------------------------------------------------------
+    const libraryRef = database.ref('library');
+
+    // Connection state
+    const connectedRef = database.ref('.info/connected');
+    connectedRef.on('value', (snap) => {
+      const connected = snap.val() === true;
+      if (connected) {
+        connectionDot.classList.add('online');
+        connectionDot.classList.remove('offline');
+        connectionText.textContent = 'Connected to Firebase';
+      } else {
+        connectionDot.classList.add('offline');
+        connectionDot.classList.remove('online');
+        connectionText.textContent = 'Disconnected from Firebase';
+      }
+    });
+
+    // Main data listener
+    libraryRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        // If no data yet, keep defaults but mark as waiting
+        connectionText.textContent = 'Waiting for data from device…';
+        return;
+      }
+
+      // Update state with data from Firebase (fallback to previous)
+      state.seat1 = data.seat1 ?? 0;
+      state.seat2 = data.seat2 ?? 0;
+      state.seat3 = data.seat3 ?? 0;
+      state.seat4 = data.seat4 ?? 0;
+      state.occupied = data.occupied ?? 0;
+      state.available = data.available ?? 4;
+      state.totalSeats = data.totalSeats ?? 4;
+
+      render();
+    }, (error) => {
+      console.error('Firebase read error:', error);
+      connectionText.textContent = 'Error reading database';
+      connectionDot.classList.add('offline');
+      connectionDot.classList.remove('online');
+    });
+
+    // Initial render with defaults
+    render();
+
+    // ----------------------------------------------------------------
+    // 6. OPTIONAL: fallback timer to show "last update" even if no change
+    // ----------------------------------------------------------------
+    setInterval(() => {
+      if (connectionDot.classList.contains('online')) {
+        // just update timestamp slightly if needed, but we already do on data
+        // this keeps it fresh every 15s without data change
+        const now = new Date();
+        lastUpdate.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }
+    }, 15000);
+
+  })();
+</script>
+</body>
+</html>
